@@ -5,10 +5,16 @@ import {
   MsgCreateVestingAccount,
 } from "cosmjs-types/cosmos/vesting/v1beta1/tx";
 
-export const registry = new Registry([
-  ["/cosmos.vesting.v1beta1.MsgCreateVestingAccount", MsgCreateVestingAccount],
-  ["/cosmos.vesting.v1beta1.MsgReturnGrants", MsgReturnGrants],
-]);
+export const registry = new Registry(
+  // @ts-expect-error version mismatch
+  [
+    [
+      "/cosmos.vesting.v1beta1.MsgCreateVestingAccount",
+      MsgCreateVestingAccount,
+    ],
+    ["/cosmos.vesting.v1beta1.MsgReturnGrants", MsgReturnGrants],
+  ]
+);
 
 interface MakeFeeObjectArgs {
   denom?: string;
