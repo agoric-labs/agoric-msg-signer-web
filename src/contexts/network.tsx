@@ -3,7 +3,7 @@ import { getNetworkConfig } from "../lib/getNetworkConfig";
 import { useSearch } from "wouter/use-location";
 import qs from "query-string";
 import { toast } from "react-toastify";
-import { makeAgoricChainStorageWatcher } from "@agoric/rpc";
+
 
 const _netNames = [
   "local",
@@ -21,12 +21,7 @@ interface NetworkContext {
   networkConfig: NetworkConfig | null;
   error: string | null;
   api: string | undefined;
-  watcher: AgoricChainStorageWatcher | undefined;
 }
-
-type AgoricChainStorageWatcher = ReturnType<
-  typeof makeAgoricChainStorageWatcher
->;
 
 export const NetworkContext = createContext<NetworkContext>({
   netName: "local",
@@ -34,7 +29,6 @@ export const NetworkContext = createContext<NetworkContext>({
   networkConfig: null,
   error: null,
   api: undefined,
-  watcher: undefined,
 });
 
 const getNameName = (netName: string): NetName | undefined =>
@@ -53,14 +47,6 @@ export const NetworkContextProvider = ({
     null
   );
   const [error, setError] = useState<NetworkContext["error"]>(null);
-
-  let watcher;
-  if (networkConfig) {
-    watcher = makeAgoricChainStorageWatcher(
-      networkConfig.rpc,
-      networkConfig.chainName
-    );
-  }
 
   useEffect(() => {
     if (netName) {
@@ -106,7 +92,6 @@ export const NetworkContextProvider = ({
         networkConfig,
         api,
         error,
-        watcher,
       }}
     >
       {children}

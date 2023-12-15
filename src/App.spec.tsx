@@ -11,7 +11,7 @@ describe("App.tsx", () => {
       </ContextProviders>
     );
 
-    const titleElement = await screen.findByText("Agoric Proto Signer");
+    const titleElement = await screen.findByText("Agoric Msg Signer");
     expect(titleElement).toBeTruthy();
   });
 });

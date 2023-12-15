@@ -3,14 +3,13 @@ import { Nav } from "./components/Nav";
 import { Footer } from "./components/Footer";
 import { NetworkDropdown } from "./components/NetworkDropdown";
 import { WalletConnectButton } from "./components/WalletConnectButton";
-import { Tabs } from "./components/Tabs";
-import { ProposeBountyForm } from "./components/ProposeBountyForm";
+import { ReturnGrantsForm } from "./components/ReturnGrantsForm";
 
 const App = () => {
   return (
     <div className="flex flex-col min-h-screen">
       <Nav
-        title="Agoric Proto Signer"
+        title="Agoric Msg Signer"
         showLogo={false}
         rightContent={
           <>
@@ -22,11 +21,13 @@ const App = () => {
         }
       />
       <main className="flex-grow mx-auto max-w-7xl min-w-full py-6 sm:px-6 lg:px-8">
-        <div className="my-0 mx-auto max-w-3xl bg-white rounded p-3">
-          <ProposeBountyForm
-            title="Propose Bounty"
-            description="Attach a bounty or reward to a GitHub Issue. When a Pull Request that marks the issue closed is approved and merged, the bounty will be released to the PR author."
-          />
+        <div className="w-full max-w-5xl px-2 py-2 sm:px-0 m-auto">
+          <div className="flex flex-col min-w-full rounded-xl bg-white p-3">
+            <ReturnGrantsForm
+              title="Return Grants"
+              description="Creates /cosmos.vesting.v1beta1.MsgReturnGrants message"
+            />
+          </div>
         </div>
       </main>
       <Footer />

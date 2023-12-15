@@ -1,4 +1,4 @@
-# Agoric Proto Signer Web
+# Agoric Msg Signer Web
 
 ```bash
 # install depedencies

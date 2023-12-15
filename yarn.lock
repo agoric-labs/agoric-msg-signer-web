@@ -72,17 +72,17 @@
     "@endo/promise-kit" "^0.2.56"
     node-fetch "^2.6.0"
 
-"@agoric/cosmic-proto@0.3.1-dev-43543c3.0":
-  version "0.3.1-dev-43543c3.0"
-  resolved "https://registry.yarnpkg.com/@agoric/cosmic-proto/-/cosmic-proto-0.3.1-dev-43543c3.0.tgz#fe1996be4e287a22c94867ba43e78677eb0361bf"
-  integrity sha512-n963i3sLUEEesMjjz9KD9TPFL5zpUh1T0BojIsCfHGGU6KdR8lyepKop3BR5pM4FX91j3AwZE9+D1ROPzqaZkw==
-  dependencies:
-    protobufjs "^7.0.0"
-
 "@agoric/cosmic-proto@^0.3.0":
   version "0.3.0"
   resolved "https://registry.yarnpkg.com/@agoric/cosmic-proto/-/cosmic-proto-0.3.0.tgz#c9d31d3946c91fbb1630f89d8ba63a662bcdacc5"
   integrity sha512-cIunby6gs53sGkHx3ALraREbfVQXvsIcObMjQQ0/tZt5HVqwoS7Y1Qj1Xl0ZZvqE8B1Zyk7QMDj829mbTII+9g==
+  dependencies:
+    protobufjs "^7.0.0"
+
+"@agoric/cosmic-proto@^0.3.1-dev-43543c3.0":
+  version "0.3.1-other-dev-8f8782b.0"
+  resolved "https://registry.yarnpkg.com/@agoric/cosmic-proto/-/cosmic-proto-0.3.1-other-dev-8f8782b.0.tgz#a1144553bcfb7604f711be1b89248dd93f0294aa"
+  integrity sha512-f2lN0qxYCsZlisnkesjBekiiOFbAcs8Gvi8sIqbjTTW2rSudDHQKwBiJrwnxTb2PBuEP4GhkEsKW9Tl4Y+N9Eg==
   dependencies:
     protobufjs "^7.0.0"
 
@@ -3253,10 +3253,9 @@ cosmjs-types@^0.8.0:
     long "^4.0.0"
     protobufjs "~6.11.2"
 
-cosmjs-types@^0.9.0:
+cosmjs-types@^0.9.0, "cosmjs-types@github:agoric-labs/cosmjs-types#v0.45.16-alpha.agoric.3":
   version "0.9.0"
-  resolved "https://registry.yarnpkg.com/cosmjs-types/-/cosmjs-types-0.9.0.tgz#c3bc482d28c7dfa25d1445093fdb2d9da1f6cfcc"
-  integrity sha512-MN/yUe6mkJwHnCFfsNPeCfXVhyxHYW6c/xDUzrSbBycYzw++XvWDMJArXp2pLdgD6FQ8DW79vkPjeNKVrXaHeQ==
+  resolved "https://codeload.github.com/agoric-labs/cosmjs-types/tar.gz/e3aebfe3a259b6e899cdeb37e44bdfc6755dbdeb"
 
 cross-spawn@^7.0.2:
   version "7.0.3"
@@ -3697,7 +3696,7 @@ eslint@^8.45.0:
     strip-ansi "^6.0.1"
     text-table "^0.2.0"
 
-"esm@github:agoric-labs/esm#Agoric-built":
+esm@agoric-labs/esm#Agoric-built:
   version "3.2.25"
   resolved "https://codeload.github.com/agoric-labs/esm/tar.gz/3603726ad4636b2f865f463188fcaade6375638e"
 

@@ -29,7 +29,7 @@ const Nav = ({ title, showLogo, rightContent, logoUrl }: NavProps) => (
 );
 
 Nav.defaultProps = {
-  title: "Agoric Proto Signer",
+  title: "Agoric Msg Signer",
   showLogo: true,
   logoUrl: "scale.svg",
 };
