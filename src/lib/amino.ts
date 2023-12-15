@@ -4,6 +4,9 @@ import {
   MsgCreateVestingAccount,
 } from "cosmjs-types/cosmos/vesting/v1beta1/tx";
 import { AminoConverters } from "@cosmjs/stargate";
+// import { toBech32, fromBase64, toBase64 } from "@cosmjs/encoding";
+// import { toAccAddress } from "@cosmjs/stargate/build/queryclient/utils";
+// import { bech32Config } from "../lib/suggestChain";
 
 export interface AminoMsgReturnGrants extends AminoMsg {
   readonly type: "cosmos-sdk/MsgCreateVestingAccount";
@@ -39,11 +42,16 @@ export function createVestingAminoConverters(): AminoConverters {
       toAmino: ({
         address,
       }: MsgReturnGrants): AminoMsgReturnGrants["value"] => ({
+        // address: toBech32(
+        //   bech32Config.bech32PrefixAccAddr,
+        //   fromBase64(address)
+        // ),
         address,
       }),
       fromAmino: ({
         address,
       }: AminoMsgReturnGrants["value"]): MsgReturnGrants => ({
+        // address: toBase64(toAccAddress(address)),
         address,
       }),
     },

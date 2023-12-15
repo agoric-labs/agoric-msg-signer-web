@@ -7,13 +7,19 @@ import {
   useCallback,
 } from "react";
 import { Decimal } from "@cosmjs/math";
-import { AminoTypes, SigningStargateClient } from "@cosmjs/stargate";
+import {
+  AminoTypes,
+  SigningStargateClient,
+  createAuthzAminoConverters,
+  createBankAminoConverters,
+} from "@cosmjs/stargate";
 import { AccountData } from "@keplr-wallet/types";
 import { useNetwork, NetName } from "../hooks/useNetwork";
 import { suggestChain } from "../lib/suggestChain";
 import { getNetConfigUrl } from "../lib/getNetworkConfig";
 import { registry } from "../lib/messageBuilder";
 import { createVestingAminoConverters } from "../lib/amino";
+import { accountParser } from "../lib/accountParser";
 
 interface WalletContext {
   walletAddress: string | null;
@@ -68,7 +74,11 @@ export const WalletContextProvider = ({
       if (accounts?.[0].address !== walletAddress) {
         saveAddress(accounts[0]);
       }
-      const converters = createVestingAminoConverters();
+      const converters = {
+        ...createAuthzAminoConverters(),
+        ...createBankAminoConverters(),
+        ...createVestingAminoConverters(),
+      };
       try {
         stargateClient.current = await SigningStargateClient.connectWithSigner(
           rpc,
@@ -83,6 +93,7 @@ export const WalletContextProvider = ({
             },
             aminoTypes: new AminoTypes(converters),
             converters,
+            accountParser,
           }
         );
       } catch (e) {
