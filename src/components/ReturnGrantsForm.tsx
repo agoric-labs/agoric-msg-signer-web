@@ -91,6 +91,7 @@ const ReturnGrantsForm = ({ title, description }: FormProps) => {
     const formData = new FormData(formRef.current);
     const address = (formData.get("walletAddress") as string) || "";
     const msg = makeReturnGrantsMsg(address);
+    console.log("msg", msg);
     return await signAndBroadcast(msg);
   };
 
