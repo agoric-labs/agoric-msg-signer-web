@@ -1,5 +1,7 @@
 import { StdFee } from "@cosmjs/amino";
 import { coins, Registry } from "@cosmjs/proto-signing";
+// import { toBase64 } from "@cosmjs/encoding";
+// import { toAccAddress } from "@cosmjs/stargate/build/queryclient/utils";
 import {
   MsgReturnGrants,
   MsgCreateVestingAccount,
@@ -28,9 +30,17 @@ export const makeFeeObject = ({ denom, amount, gas }: MakeFeeObjectArgs) =>
     gas: gas ? String(gas) : "auto",
   } as StdFee);
 
-export const makeReturnGrantsMsg = (address: string) => ({
-  typeUrl: "/cosmos.vesting.v1beta1.MsgReturnGrants",
-  value: {
-    address,
-  },
-});
+export const makeReturnGrantsMsg = (address: string) => {
+  return {
+    typeUrl: "/cosmos.vesting.v1beta1.MsgReturnGrants",
+    // value: MsgReturnGrants.encode(
+    // MsgReturnGrants.fromPartial({
+    //   address,
+    // })
+    // ).finish(),
+    // value: {
+    //   address: toBase64(toAccAddress(address)),
+    // },
+    value: { address },
+  };
+};

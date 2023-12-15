@@ -49,6 +49,11 @@ const ReturnGrantsForm = ({ title, description }: FormProps) => {
       );
       const adjustment = 1.3;
       const gas = Math.ceil(estimate * adjustment);
+      console.log("msg", msg);
+      const { accountNumber, sequence } = await stargateClient.getSequence(
+        walletAddress
+      );
+      console.log({ accountNumber, sequence });
       txResult = await stargateClient.signAndBroadcast(
         walletAddress,
         [msg],
@@ -86,6 +91,7 @@ const ReturnGrantsForm = ({ title, description }: FormProps) => {
     const formData = new FormData(formRef.current);
     const address = (formData.get("walletAddress") as string) || "";
     const msg = makeReturnGrantsMsg(address);
+    console.log("msg", msg);
     return await signAndBroadcast(msg);
   };
 
