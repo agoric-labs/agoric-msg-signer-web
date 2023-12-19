@@ -1,5 +1,6 @@
 import { StdFee } from "@cosmjs/amino";
 import { coins, Registry } from "@cosmjs/proto-signing";
+import { StdSignDoc } from "@keplr-wallet/types";
 // import { toBase64 } from "@cosmjs/encoding";
 // import { toAccAddress } from "@cosmjs/stargate/build/queryclient/utils";
 import {
@@ -24,6 +25,39 @@ interface MakeFeeObjectArgs {
   gas?: string | number;
 }
 
+export function createSignDoc(
+  chainId: string,
+  accountNumber: number,
+  sequence: number,
+  address: string
+): StdSignDoc {
+  console.log({ chainId, accountNumber, sequence, address });
+  return {
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    chain_id: chainId,
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    account_number: `${accountNumber}`,
+    sequence: `${sequence}`,
+    fee: {
+      amount: [{ amount: "100", denom: "ubld" }],
+      gas: "200000",
+    },
+    memo: "",
+    msgs: [
+      {
+        // type: "cosmos-sdk/MsgReturnGrants",
+        type: "/cosmos.vesting.v1beta1.MsgReturnGrants",
+        // address,
+        value: {
+          address: address,
+        },
+        // "@type": "/cosmos.vesting.v1beta1.MsgReturnGrants",
+        // address: address,
+      },
+    ],
+  };
+}
+
 export const makeFeeObject = ({ denom, amount, gas }: MakeFeeObjectArgs) =>
   ({
     amount: coins(amount || 0, denom || "uist"),
@@ -41,6 +75,7 @@ export const makeReturnGrantsMsg = (address: string) => {
     // value: {
     //   address: toBase64(toAccAddress(address)),
     // },
+    // value: { address },
     value: { address },
   };
 };

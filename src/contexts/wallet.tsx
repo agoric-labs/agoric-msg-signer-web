@@ -27,6 +27,8 @@ interface WalletContext {
   stargateClient: SigningStargateClient | undefined;
   isLoading: boolean;
   rpc: string | null;
+  chainId: string | null;
+  offlineSigner: any;
 }
 
 export const WalletContext = createContext<WalletContext>({
@@ -35,6 +37,8 @@ export const WalletContext = createContext<WalletContext>({
   stargateClient: undefined,
   isLoading: false,
   rpc: null,
+  chainId: null,
+  offlineSigner: null,
 });
 
 export const WalletContextProvider = ({
@@ -43,9 +47,11 @@ export const WalletContextProvider = ({
   children: ReactNode;
 }) => {
   const stargateClient = useRef<SigningStargateClient | undefined>(undefined);
+  const offlineSigner = useRef<any>(undefined);
   const { netName } = useNetwork();
   const [currNetName, setCurrNetName] = useState(netName);
   const [rpc, setRpc] = useState<WalletContext["rpc"]>(null);
+  const [chainId, setChainId] = useState<WalletContext["chainId"]>(null);
   const [walletAddress, setWalletAddress] = useState<
     WalletContext["walletAddress"]
   >(() => {
@@ -67,11 +73,12 @@ export const WalletContextProvider = ({
       getNetConfigUrl(netName as NetName)
     );
     setRpc(rpc);
+    setChainId(chainId);
     if (chainId) {
       await window.keplr.enable(chainId);
-      const offlineSigner = window.keplr.getOfflineSignerOnlyAmino(chainId);
+      offlineSigner.current = window.keplr.getOfflineSignerOnlyAmino(chainId);
       // const offlineSigner = window.keplr.getOfflineSigner(chainId);
-      const accounts = await offlineSigner.getAccounts();
+      const accounts = await offlineSigner.current.getAccounts();
       if (accounts?.[0].address !== walletAddress) {
         saveAddress(accounts[0]);
       }
@@ -83,7 +90,7 @@ export const WalletContextProvider = ({
       try {
         stargateClient.current = await SigningStargateClient.connectWithSigner(
           rpc,
-          offlineSigner,
+          offlineSigner.current,
           {
             // @ts-expect-error version mismatch
             registry,
@@ -123,8 +130,10 @@ export const WalletContextProvider = ({
         walletAddress,
         connectWallet,
         stargateClient: stargateClient.current,
+        offlineSigner: offlineSigner.current,
         isLoading,
         rpc,
+        chainId,
       }}
     >
       {children}

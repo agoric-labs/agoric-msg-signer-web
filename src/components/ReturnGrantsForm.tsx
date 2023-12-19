@@ -7,7 +7,12 @@ import { useNetwork, NetName } from "../hooks/useNetwork";
 import { useWallet } from "../hooks/useWallet";
 import { EncodeObject } from "@cosmjs/proto-signing";
 import { DeliverTxResponse, assertIsDeliverTxSuccess } from "@cosmjs/stargate";
-import { makeFeeObject, makeReturnGrantsMsg } from "../lib/messageBuilder";
+import { TxRaw } from "cosmjs-types/cosmos/tx/v1beta1/tx";
+import {
+  createSignDoc,
+  makeFeeObject,
+  makeReturnGrantsMsg,
+} from "../lib/messageBuilder";
 import { parseError } from "../utils/transactionParser";
 
 interface FormProps {
@@ -15,10 +20,19 @@ interface FormProps {
   description: ReactNode;
 }
 
+enum BroadcastMode {
+  /** Return after tx commit */
+  Block = "block",
+  /** Return after CheckTx */
+  Sync = "sync",
+  /** Return right away */
+  Async = "async",
+}
+
 const ReturnGrantsForm = ({ title, description }: FormProps) => {
   const formRef = useRef<HTMLFormElement>(null);
   const walletInputRef = useRef<HTMLInputElement>(null);
-  const { walletAddress, stargateClient } = useWallet();
+  const { walletAddress, stargateClient, offlineSigner, chainId } = useWallet();
   const { netName } = useNetwork();
 
   const handlePopulateAddress = () => {
@@ -42,24 +56,59 @@ const ReturnGrantsForm = ({ title, description }: FormProps) => {
     });
     let txResult: DeliverTxResponse | undefined;
     try {
-      const estimate = await stargateClient.simulate(
-        walletAddress,
-        [msg],
-        undefined
-      );
+      // const estimate = await stargateClient.simulate(
+      //   walletAddress,
+      //   [msg],
+      //   undefined
+      // );
       const adjustment = 1.3;
-      const gas = Math.ceil(estimate * adjustment);
+      const gas = Math.ceil(120_000 * adjustment);
       console.log("msg", msg);
+
       const { accountNumber, sequence } = await stargateClient.getSequence(
         walletAddress
       );
-      console.log({ accountNumber, sequence });
-      txResult = await stargateClient.signAndBroadcast(
-        walletAddress,
-        [msg],
-        makeFeeObject({ gas })
+      console.log({
+        accountNumber,
+        sequence,
+        typeofS: typeof sequence,
+        chainId,
+      });
+      const signDoc = createSignDoc(
+        chainId as string,
+        accountNumber,
+        sequence,
+        walletAddress
       );
-      assertIsDeliverTxSuccess(txResult);
+      console.log("chainId", chainId);
+      console.log("signDoc", signDoc);
+      // @see https://docs.keplr.app/api/#sign-amino
+
+      const txRaw = await offlineSigner.signAmino(walletAddress, signDoc);
+      console.log("txRaw", txRaw);
+      // const txBytes = TxRaw.encode(txRaw).finish();
+
+      // Encode the string as a byte array
+      const jsonString = JSON.stringify(txRaw);
+      const textEncoder = new TextEncoder();
+      const encodedBytes = textEncoder.encode(jsonString);
+      // Convert the byte array to Uint8Array
+      const uint8Array = new Uint8Array(encodedBytes);
+
+      console.log("txBytes", uint8Array);
+      // txResult = await stargateClient.broadcastTx(txBytes);
+      txResult = await window.keplr.sendTx(
+        chainId as string,
+        uint8Array,
+        BroadcastMode.Block
+      );
+      console.log("txResult", txResult);
+      // txResult = await stargateClient.signAndBroadcast(
+      //   walletAddress,
+      //   [msg],
+      //   makeFeeObject({ gas })
+      // );
+      // assertIsDeliverTxSuccess(txResult);
     } catch (e) {
       console.error(e);
       toast.update(toastId, {
