@@ -5,14 +5,8 @@ import { Button } from "./Button";
 import { TxToastMessage } from "./TxToastMessage";
 import { useNetwork, NetName } from "../hooks/useNetwork";
 import { useWallet } from "../hooks/useWallet";
-import { EncodeObject } from "@cosmjs/proto-signing";
-import { DeliverTxResponse, assertIsDeliverTxSuccess } from "@cosmjs/stargate";
-import { TxRaw } from "cosmjs-types/cosmos/tx/v1beta1/tx";
-import {
-  createSignDoc,
-  makeFeeObject,
-  makeReturnGrantsMsg,
-} from "../lib/messageBuilder";
+import { DeliverTxResponse } from "@cosmjs/stargate";
+import { aminoResponseToTx, createStdSignDoc } from "../lib/messageBuilder";
 import { parseError } from "../utils/transactionParser";
 
 interface FormProps {
@@ -32,7 +26,8 @@ enum BroadcastMode {
 const ReturnGrantsForm = ({ title, description }: FormProps) => {
   const formRef = useRef<HTMLFormElement>(null);
   const walletInputRef = useRef<HTMLInputElement>(null);
-  const { walletAddress, stargateClient, offlineSigner, chainId } = useWallet();
+  const { walletAddress, stargateClient, offlineSigner, chainId, pubkey } =
+    useWallet();
   const { netName } = useNetwork();
 
   const handlePopulateAddress = () => {
@@ -44,7 +39,13 @@ const ReturnGrantsForm = ({ title, description }: FormProps) => {
     walletInputRef.current.value = walletAddress;
   };
 
-  async function signAndBroadcast(msg: EncodeObject) {
+  const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!formRef.current) throw new Error("No form data");
+    const formData = new FormData(formRef.current);
+    const address = (formData.get("walletAddress") as string) || "";
+    // const msg = makeReturnGrantsMsg(address);
+    // console.log("msg", msg);
     if (!stargateClient) {
       toast.error("Network not connected.", { autoClose: 3000 });
       throw new Error("stargateClient not found");
@@ -56,50 +57,35 @@ const ReturnGrantsForm = ({ title, description }: FormProps) => {
     });
     let txResult: DeliverTxResponse | undefined;
     try {
-      // const estimate = await stargateClient.simulate(
-      //   walletAddress,
-      //   [msg],
-      //   undefined
-      // );
-      const adjustment = 1.3;
-      const gas = Math.ceil(120_000 * adjustment);
-      console.log("msg", msg);
-
       const { accountNumber, sequence } = await stargateClient.getSequence(
         walletAddress
       );
-      console.log({
-        accountNumber,
-        sequence,
-        typeofS: typeof sequence,
-        chainId,
-      });
-      const signDoc = createSignDoc(
+      const stdSignDoc = createStdSignDoc(
         chainId as string,
         accountNumber,
         sequence,
-        walletAddress
+        address
       );
-      console.log("chainId", chainId);
-      console.log("signDoc", signDoc);
-      // @see https://docs.keplr.app/api/#sign-amino
+      console.log("stdSignDoc", stdSignDoc);
+      const { signature, signed } = await offlineSigner.signAmino(
+        // chainId,
+        walletAddress,
+        stdSignDoc
+      );
+      console.log("Amino", { signature, signed });
+      if (!pubkey) throw new Error("no pubkey found");
+      const txBytes = aminoResponseToTx(
+        signed,
+        signature,
+        pubkey as Uint8Array
+      );
+      console.log("txByes", txBytes);
 
-      const txRaw = await offlineSigner.signAmino(walletAddress, signDoc);
-      console.log("txRaw", txRaw);
-      // const txBytes = TxRaw.encode(txRaw).finish();
-
-      // Encode the string as a byte array
-      const jsonString = JSON.stringify(txRaw);
-      const textEncoder = new TextEncoder();
-      const encodedBytes = textEncoder.encode(jsonString);
-      // Convert the byte array to Uint8Array
-      const uint8Array = new Uint8Array(encodedBytes);
-
-      console.log("txBytes", uint8Array);
+      console.log("txraw from partial", txBytes);
       // txResult = await stargateClient.broadcastTx(txBytes);
       txResult = await window.keplr.sendTx(
         chainId as string,
-        uint8Array,
+        txBytes,
         BroadcastMode.Block
       );
       console.log("txResult", txResult);
@@ -132,16 +118,6 @@ const ReturnGrantsForm = ({ title, description }: FormProps) => {
       });
       formRef.current?.reset();
     }
-  }
-
-  const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!formRef.current) throw new Error("No form data");
-    const formData = new FormData(formRef.current);
-    const address = (formData.get("walletAddress") as string) || "";
-    const msg = makeReturnGrantsMsg(address);
-    console.log("msg", msg);
-    return await signAndBroadcast(msg);
   };
 
   return (

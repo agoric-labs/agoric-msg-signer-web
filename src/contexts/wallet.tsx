@@ -29,6 +29,7 @@ interface WalletContext {
   rpc: string | null;
   chainId: string | null;
   offlineSigner: any;
+  pubkey: Uint8Array | null;
 }
 
 export const WalletContext = createContext<WalletContext>({
@@ -39,6 +40,7 @@ export const WalletContext = createContext<WalletContext>({
   rpc: null,
   chainId: null,
   offlineSigner: null,
+  pubkey: null,
 });
 
 export const WalletContextProvider = ({
@@ -51,6 +53,7 @@ export const WalletContextProvider = ({
   const { netName } = useNetwork();
   const [currNetName, setCurrNetName] = useState(netName);
   const [rpc, setRpc] = useState<WalletContext["rpc"]>(null);
+  const [pubkey, setPubkey] = useState<Uint8Array | null>(null);
   const [chainId, setChainId] = useState<WalletContext["chainId"]>(null);
   const [walletAddress, setWalletAddress] = useState<
     WalletContext["walletAddress"]
@@ -79,9 +82,11 @@ export const WalletContextProvider = ({
       offlineSigner.current = window.keplr.getOfflineSignerOnlyAmino(chainId);
       // const offlineSigner = window.keplr.getOfflineSigner(chainId);
       const accounts = await offlineSigner.current.getAccounts();
-      if (accounts?.[0].address !== walletAddress) {
-        saveAddress(accounts[0]);
-      }
+      // if (accounts?.[0].address !== walletAddress) {
+      console.log("accounts[0]", accounts[0]);
+      saveAddress(accounts[0]);
+      setPubkey(accounts[0].pubkey);
+      // }
       const converters = {
         ...createAuthzAminoConverters(),
         ...createBankAminoConverters(),
@@ -134,6 +139,7 @@ export const WalletContextProvider = ({
         isLoading,
         rpc,
         chainId,
+        pubkey,
       }}
     >
       {children}

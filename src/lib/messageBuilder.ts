@@ -1,12 +1,21 @@
 import { StdFee } from "@cosmjs/amino";
+import { Int53 } from "@cosmjs/math";
+import { Any } from "cosmjs-types/google/protobuf/any";
 import { coins, Registry } from "@cosmjs/proto-signing";
-import { StdSignDoc } from "@keplr-wallet/types";
-// import { toBase64 } from "@cosmjs/encoding";
-// import { toAccAddress } from "@cosmjs/stargate/build/queryclient/utils";
+import { StdSignDoc, StdSignature } from "@keplr-wallet/types";
+import { fromBase64 } from "@cosmjs/encoding";
+import {
+  encodePubkey,
+  makeAuthInfoBytes,
+  TxBodyEncodeObject,
+} from "@cosmjs/proto-signing";
 import {
   MsgReturnGrants,
   MsgCreateVestingAccount,
 } from "cosmjs-types/cosmos/vesting/v1beta1/tx";
+import { TxRaw } from "cosmjs-types/cosmos/tx/v1beta1/tx";
+import { SignMode } from "cosmjs-types/cosmos/tx/signing/v1beta1/signing";
+import { encodeSecp256k1Pubkey } from "@cosmjs/amino";
 
 export const registry = new Registry(
   // @ts-expect-error version mismatch
@@ -25,7 +34,7 @@ interface MakeFeeObjectArgs {
   gas?: string | number;
 }
 
-export function createSignDoc(
+export function createStdSignDoc(
   chainId: string,
   accountNumber: number,
   sequence: number,
@@ -33,30 +42,72 @@ export function createSignDoc(
 ): StdSignDoc {
   console.log({ chainId, accountNumber, sequence, address });
   return {
-    // eslint-disable-next-line @typescript-eslint/naming-convention
     chain_id: chainId,
-    // eslint-disable-next-line @typescript-eslint/naming-convention
     account_number: `${accountNumber}`,
     sequence: `${sequence}`,
     fee: {
-      amount: [{ amount: "100", denom: "ubld" }],
+      amount: [{ amount: "1000", denom: "uist" }],
       gas: "200000",
     },
     memo: "",
     msgs: [
+      // XXX should this just be { address }, with no type or value?
       {
-        // type: "cosmos-sdk/MsgReturnGrants",
         type: "/cosmos.vesting.v1beta1.MsgReturnGrants",
-        // address,
         value: {
-          address: address,
+          address,
         },
-        // "@type": "/cosmos.vesting.v1beta1.MsgReturnGrants",
-        // address: address,
       },
     ],
   };
 }
+
+export const aminoResponseToTx = (
+  signed: StdSignDoc,
+  signature: StdSignature,
+  pubkey: Uint8Array
+): Uint8Array => {
+  const signedTxBody = {
+    messages: [
+      Any.fromPartial({
+        typeUrl: signed.msgs[0].type,
+        value: Uint8Array.from(
+          MsgReturnGrants.encode(
+            MsgReturnGrants.fromPartial(signed.msgs[0].value)
+          ).finish()
+        ),
+      }),
+    ],
+    memo: signed.memo,
+  };
+  const signedTxBodyEncodeObject: TxBodyEncodeObject = {
+    typeUrl: "/cosmos.tx.v1beta1.TxBody",
+    value: signedTxBody,
+  };
+  const signedTxBodyBytes = registry.encode(signedTxBodyEncodeObject);
+  const signedGasLimit = Int53.fromString(signed.fee.gas).toNumber();
+  const signedSequence = Int53.fromString(signed.sequence).toNumber();
+  const signedAuthInfoBytes = makeAuthInfoBytes(
+    [
+      {
+        pubkey: encodePubkey(encodeSecp256k1Pubkey(pubkey)),
+        sequence: signedSequence,
+      },
+    ],
+    signed.fee.amount,
+    signedGasLimit,
+    signed.fee.granter,
+    signed.fee.payer,
+    SignMode.SIGN_MODE_LEGACY_AMINO_JSON
+  );
+  return TxRaw.encode(
+    TxRaw.fromPartial({
+      bodyBytes: signedTxBodyBytes,
+      authInfoBytes: signedAuthInfoBytes,
+      signatures: [fromBase64(signature.signature)],
+    })
+  ).finish();
+};
 
 export const makeFeeObject = ({ denom, amount, gas }: MakeFeeObjectArgs) =>
   ({
@@ -64,18 +115,31 @@ export const makeFeeObject = ({ denom, amount, gas }: MakeFeeObjectArgs) =>
     gas: gas ? String(gas) : "auto",
   } as StdFee);
 
-export const makeReturnGrantsMsg = (address: string) => {
-  return {
-    typeUrl: "/cosmos.vesting.v1beta1.MsgReturnGrants",
-    // value: MsgReturnGrants.encode(
-    // MsgReturnGrants.fromPartial({
-    //   address,
-    // })
-    // ).finish(),
-    // value: {
-    //   address: toBase64(toAccAddress(address)),
-    // },
-    // value: { address },
-    value: { address },
-  };
+// export const makeReturnGrantsMsg = (address: string) => {
+//   return {
+//     typeUrl: "/cosmos.vesting.v1beta1.MsgReturnGrants",
+//     value: { address },
+//   };
+// };
+
+// XXX not currently used
+export const postTransaction = async (
+  txBytes: string,
+  mode = "BROADCAST_MODE_BLOCK"
+) => {
+  try {
+    const res = await fetch(
+      "https://emerynet.api.agoric.net/cosmos/tx/v1beta1/txs",
+      {
+        method: "POST",
+        body: JSON.stringify({
+          tx_bytes: txBytes, // base64 string req.
+          mode: mode,
+        }),
+      }
+    );
+    if (res) return res;
+  } catch (e) {
+    console.error("e", e);
+  }
 };
