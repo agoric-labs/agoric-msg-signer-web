@@ -53,7 +53,8 @@ export function createStdSignDoc(
     msgs: [
       // XXX should this just be { address }, with no type or value?
       {
-        type: "/cosmos.vesting.v1beta1.MsgReturnGrants",
+        // address,
+        typeUrl: "/cosmos.vesting.v1beta1.MsgReturnGrants",
         value: { address },
       },
     ],
@@ -69,8 +70,8 @@ export const aminoResponseToTx = (
   const signedTxBody = {
     messages: [
       {
-        typeUrl: signed.msgs[0].type,
-        value: signed.msgs[0].value,
+        typeUrl: "/cosmos.vesting.v1beta1.MsgReturnGrants",
+        value: signed.msgs[0],
       },
     ],
     memo: signed.memo,

@@ -6,7 +6,6 @@ import {
   ReactNode,
   useCallback,
 } from "react";
-import { Decimal } from "@cosmjs/math";
 import {
   AminoTypes,
   SigningStargateClient,
@@ -20,6 +19,7 @@ import { getNetConfigUrl } from "../lib/getNetworkConfig";
 import { registry } from "../lib/messageBuilder";
 import { createVestingAminoConverters } from "../lib/amino";
 import { accountParser } from "../lib/accountParser";
+import { makeClient } from "../lib/startgate";
 
 interface WalletContext {
   walletAddress: string | null;
@@ -93,21 +93,12 @@ export const WalletContextProvider = ({
         ...createVestingAminoConverters(),
       };
       try {
-        stargateClient.current = await SigningStargateClient.connectWithSigner(
+        stargateClient.current = await makeClient(
           rpc,
           offlineSigner.current,
-          {
-            // @ts-expect-error version mismatch
-            registry,
-            gasPrice: {
-              denom: "uist",
-              // @ts-expect-error version mismatch
-              amount: Decimal.fromUserInput("50000000", 0),
-            },
-            aminoTypes: new AminoTypes(converters),
-            converters,
-            accountParser,
-          }
+          converters,
+          accountParser,
+          registry
         );
       } catch (e) {
         console.error("error stargateClient setup", e);

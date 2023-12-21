@@ -6,7 +6,11 @@ import { TxToastMessage } from "./TxToastMessage";
 import { useNetwork, NetName } from "../hooks/useNetwork";
 import { useWallet } from "../hooks/useWallet";
 import { DeliverTxResponse } from "@cosmjs/stargate";
-import { aminoResponseToTx, createStdSignDoc } from "../lib/messageBuilder";
+import {
+  aminoResponseToTx,
+  createStdSignDoc,
+  makeFeeObject,
+} from "../lib/messageBuilder";
 import { parseError } from "../utils/transactionParser";
 
 interface FormProps {
@@ -66,29 +70,41 @@ const ReturnGrantsForm = ({ title, description }: FormProps) => {
         sequence,
         address
       );
-      console.log("stdSignDoc", stdSignDoc);
-      const { signature, signed } = await offlineSigner.signAmino(
-        // chainId,
-        walletAddress,
-        stdSignDoc
-      );
-      console.log("Amino", { signature, signed });
-      if (!pubkey) throw new Error("no pubkey found");
-      const txBytes = aminoResponseToTx(
-        signed,
-        signature,
-        pubkey as Uint8Array
-      );
-      console.log("txByes", txBytes);
 
-      console.log("txraw from partial", txBytes);
-      // txResult = await stargateClient.broadcastTx(txBytes);
-      txResult = await window.keplr.sendTx(
-        chainId as string,
-        txBytes,
-        BroadcastMode.Block
+      console.log("stdSignDoc", stdSignDoc);
+      txResult = await stargateClient.signAndBroadcast(
+        walletAddress,
+        stdSignDoc.msgs,
+        makeFeeObject({ gas: 200000 }),
+        ""
       );
-      console.log("txResult", txResult);
+      console.log("res", txResult);
+      // const { signature, signed } = await offlineSigner.signAmino(
+      //   // chainId,
+      //   walletAddress,
+      //   stdSignDoc
+      // );
+      // txResult = await stargateClient.signAndBroadcast(walletAddress, [proposalMsg],
+      //   makeFeeObject({ gas }), "")
+      // );
+      // .console
+      //   .log("Amino", { signature, signed });
+      if (!pubkey) throw new Error("no pubkey found");
+      // // const txBytes = aminoResponseToTx(
+      // //   signed,
+      // //   signature,
+      // //   pubkey as Uint8Array
+      // // );
+      // console.log("txByes", txBytes);
+
+      // console.log("txraw from partial", txBytes);
+      // txResult = await stargateClient.broadcastTx(txBytes);
+      // // txResult = await window.keplr.sendTx(
+      // //   chainId as string,
+      // //   txBytes,
+      // //   BroadcastMode.Block
+      // // );
+      // console.log("txResult", txResult);
       // txResult = await stargateClient.signAndBroadcast(
       //   walletAddress,
       //   [msg],

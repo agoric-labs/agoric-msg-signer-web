@@ -39,13 +39,13 @@ export function createVestingAminoConverters(): AminoConverters {
   return {
     "/cosmos.vesting.v1beta1.MsgReturnGrants": {
       // aminoType: "cosmos-sdk/MsgReturnGrants",
-      aminoType: "/cosmos.vesting.v1beta1.MsgReturnGrants",
+      // aminoType: "/cosmos.vesting.v1beta1.MsgReturnGrants",
       toAmino: (args: MsgReturnGrants): AminoMsgReturnGrants["value"] => {
-        console.log("toAmino", args);
+        console.log("MsgReturnGrants, toAmino", args);
         return args;
       },
       fromAmino: (args: AminoMsgReturnGrants["value"]): MsgReturnGrants => {
-        console.log("fromAmino", args);
+        console.log("MsgReturnGrants, fromAmino", args);
         return args;
       },
     },
