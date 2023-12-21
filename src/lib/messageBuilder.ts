@@ -54,11 +54,10 @@ export function createStdSignDoc(
       // XXX should this just be { address }, with no type or value?
       {
         type: "/cosmos.vesting.v1beta1.MsgReturnGrants",
-        value: {
-          address,
-        },
+        value: { address },
       },
     ],
+    timeout_height: "0",
   };
 }
 
@@ -69,17 +68,15 @@ export const aminoResponseToTx = (
 ): Uint8Array => {
   const signedTxBody = {
     messages: [
-      Any.fromPartial({
+      {
         typeUrl: signed.msgs[0].type,
-        value: Uint8Array.from(
-          MsgReturnGrants.encode(
-            MsgReturnGrants.fromPartial(signed.msgs[0].value)
-          ).finish()
-        ),
-      }),
+        value: signed.msgs[0].value,
+      },
     ],
     memo: signed.memo,
+    timeout_height: signed.timeout_height,
   };
+  console.log("signedTxBody", signedTxBody);
   const signedTxBodyEncodeObject: TxBodyEncodeObject = {
     typeUrl: "/cosmos.tx.v1beta1.TxBody",
     value: signedTxBody,
@@ -100,13 +97,20 @@ export const aminoResponseToTx = (
     signed.fee.payer,
     SignMode.SIGN_MODE_LEGACY_AMINO_JSON
   );
-  return TxRaw.encode(
+  const txRawEncoded = TxRaw.encode(
     TxRaw.fromPartial({
       bodyBytes: signedTxBodyBytes,
       authInfoBytes: signedAuthInfoBytes,
       signatures: [fromBase64(signature.signature)],
     })
   ).finish();
+  console.log(
+    "txEncoded protoString",
+    Object.values(txRawEncoded)
+      .map((n) => Number(n).toString(16).padStart(2, "0"))
+      .join(" ")
+  );
+  return txRawEncoded;
 };
 
 export const makeFeeObject = ({ denom, amount, gas }: MakeFeeObjectArgs) =>
