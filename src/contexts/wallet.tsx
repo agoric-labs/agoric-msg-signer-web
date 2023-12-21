@@ -7,7 +7,6 @@ import {
   useCallback,
 } from "react";
 import {
-  AminoTypes,
   SigningStargateClient,
   createAuthzAminoConverters,
   createBankAminoConverters,

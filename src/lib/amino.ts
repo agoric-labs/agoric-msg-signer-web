@@ -37,6 +37,7 @@ export function isAminoMsgCreateVestingAccount(
 
 export function createVestingAminoConverters(): AminoConverters {
   return {
+    // @ts-expect-error missing aminoType
     "/cosmos.vesting.v1beta1.MsgReturnGrants": {
       // aminoType: "cosmos-sdk/MsgReturnGrants",
       // aminoType: "/cosmos.vesting.v1beta1.MsgReturnGrants",

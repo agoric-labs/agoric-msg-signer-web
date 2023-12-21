@@ -5,12 +5,8 @@ import { Button } from "./Button";
 import { TxToastMessage } from "./TxToastMessage";
 import { useNetwork, NetName } from "../hooks/useNetwork";
 import { useWallet } from "../hooks/useWallet";
-import { DeliverTxResponse } from "@cosmjs/stargate";
-import {
-  aminoResponseToTx,
-  createStdSignDoc,
-  makeFeeObject,
-} from "../lib/messageBuilder";
+import { DeliverTxResponse, assertIsDeliverTxSuccess } from "@cosmjs/stargate";
+import { makeFeeObject, makeReturnGrantsMsg } from "../lib/messageBuilder";
 import { parseError } from "../utils/transactionParser";
 
 interface FormProps {
@@ -18,20 +14,10 @@ interface FormProps {
   description: ReactNode;
 }
 
-enum BroadcastMode {
-  /** Return after tx commit */
-  Block = "block",
-  /** Return after CheckTx */
-  Sync = "sync",
-  /** Return right away */
-  Async = "async",
-}
-
 const ReturnGrantsForm = ({ title, description }: FormProps) => {
   const formRef = useRef<HTMLFormElement>(null);
   const walletInputRef = useRef<HTMLInputElement>(null);
-  const { walletAddress, stargateClient, offlineSigner, chainId, pubkey } =
-    useWallet();
+  const { walletAddress, stargateClient } = useWallet();
   const { netName } = useNetwork();
 
   const handlePopulateAddress = () => {
@@ -48,8 +34,6 @@ const ReturnGrantsForm = ({ title, description }: FormProps) => {
     if (!formRef.current) throw new Error("No form data");
     const formData = new FormData(formRef.current);
     const address = (formData.get("walletAddress") as string) || "";
-    // const msg = makeReturnGrantsMsg(address);
-    // console.log("msg", msg);
     if (!stargateClient) {
       toast.error("Network not connected.", { autoClose: 3000 });
       throw new Error("stargateClient not found");
@@ -61,56 +45,14 @@ const ReturnGrantsForm = ({ title, description }: FormProps) => {
     });
     let txResult: DeliverTxResponse | undefined;
     try {
-      const { accountNumber, sequence } = await stargateClient.getSequence(
-        walletAddress
-      );
-      const stdSignDoc = createStdSignDoc(
-        chainId as string,
-        accountNumber,
-        sequence,
-        address
-      );
-
-      console.log("stdSignDoc", stdSignDoc);
+      const msg = makeReturnGrantsMsg(address);
       txResult = await stargateClient.signAndBroadcast(
         walletAddress,
-        stdSignDoc.msgs,
+        [msg],
         makeFeeObject({ gas: 200000 }),
-        ""
+        "" // memo
       );
-      console.log("res", txResult);
-      // const { signature, signed } = await offlineSigner.signAmino(
-      //   // chainId,
-      //   walletAddress,
-      //   stdSignDoc
-      // );
-      // txResult = await stargateClient.signAndBroadcast(walletAddress, [proposalMsg],
-      //   makeFeeObject({ gas }), "")
-      // );
-      // .console
-      //   .log("Amino", { signature, signed });
-      if (!pubkey) throw new Error("no pubkey found");
-      // // const txBytes = aminoResponseToTx(
-      // //   signed,
-      // //   signature,
-      // //   pubkey as Uint8Array
-      // // );
-      // console.log("txByes", txBytes);
-
-      // console.log("txraw from partial", txBytes);
-      // txResult = await stargateClient.broadcastTx(txBytes);
-      // // txResult = await window.keplr.sendTx(
-      // //   chainId as string,
-      // //   txBytes,
-      // //   BroadcastMode.Block
-      // // );
-      // console.log("txResult", txResult);
-      // txResult = await stargateClient.signAndBroadcast(
-      //   walletAddress,
-      //   [msg],
-      //   makeFeeObject({ gas })
-      // );
-      // assertIsDeliverTxSuccess(txResult);
+      assertIsDeliverTxSuccess(txResult);
     } catch (e) {
       console.error(e);
       toast.update(toastId, {

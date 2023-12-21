@@ -1,15 +1,22 @@
 import {
+  AccountParser,
   AminoConverters,
   AminoTypes,
   SigningStargateClient,
 } from "@cosmjs/stargate";
 import { Decimal } from "@cosmjs/math";
+import { AminoMsg } from "@cosmjs/amino";
+import { OfflineAminoSigner } from "@keplr-wallet/types";
+import { EncodeObject, Registry } from "@cosmjs/proto-signing";
 
 class AminoUntyped extends AminoTypes {
+  // @ts-expect-error any
   constructor(...args) {
+    // @ts-expect-error any
     super(...args);
   }
   public toAmino({ typeUrl, value }: EncodeObject): AminoMsg {
+    // @ts-expect-error unkonwn private method
     const converter = this.register[typeUrl];
     if (!converter) {
       throw new Error(
@@ -27,12 +34,13 @@ class AminoUntyped extends AminoTypes {
       };
   }
 
+  // @ts-expect-error any type
   public fromAmino(untyped): EncodeObject {
+    // @ts-expect-error unkonwn private method
     const matches = Object.entries(this.register).filter(
+      // @ts-expect-error aminoType on unknown
       ([_typeUrl, { aminoType }]) => !aminoType
     );
-    console.log("DEBUG matches", matches);
-
     switch (matches.length) {
       case 0: {
         throw new Error("test");
@@ -45,12 +53,13 @@ class AminoUntyped extends AminoTypes {
         const [typeUrl, converter] = matches[0];
         return {
           typeUrl: typeUrl,
+          // @ts-expect-error unkonwn type
           value: converter.fromAmino(untyped),
         };
       }
       default:
         throw new Error(
-          `Multiple types are registered with Amino type identifier '${type}': '` +
+          `Multiple types are registered with Amino type identifier '${untyped}': '` +
             matches
               .map(([key, _value]) => key)
               .sort()
@@ -62,11 +71,11 @@ class AminoUntyped extends AminoTypes {
 }
 
 export const makeClient = (
-  rpc,
-  offlineSigner,
+  rpc: string,
+  offlineSigner: OfflineAminoSigner,
   converters: AminoConverters,
-  accountParser,
-  registry
+  accountParser: AccountParser,
+  registry: Registry
 ) => {
   return SigningStargateClient.connectWithSigner(rpc, offlineSigner, {
     // @ts-expect-error version mismatch
