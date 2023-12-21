@@ -37,23 +37,18 @@ export function isAminoMsgCreateVestingAccount(
 
 export function createVestingAminoConverters(): AminoConverters {
   return {
+    // @ts-expect-error missing aminoType
     "/cosmos.vesting.v1beta1.MsgReturnGrants": {
-      aminoType: "cosmos-sdk/MsgReturnGrants",
-      toAmino: ({
-        address,
-      }: MsgReturnGrants): AminoMsgReturnGrants["value"] => ({
-        // address: toBech32(
-        //   bech32Config.bech32PrefixAccAddr,
-        //   fromBase64(address)
-        // ),
-        address,
-      }),
-      fromAmino: ({
-        address,
-      }: AminoMsgReturnGrants["value"]): MsgReturnGrants => ({
-        // address: toBase64(toAccAddress(address)),
-        address,
-      }),
+      // aminoType: "cosmos-sdk/MsgReturnGrants",
+      // aminoType: "/cosmos.vesting.v1beta1.MsgReturnGrants",
+      toAmino: (args: MsgReturnGrants): AminoMsgReturnGrants["value"] => {
+        console.log("MsgReturnGrants, toAmino", args);
+        return args;
+      },
+      fromAmino: (args: AminoMsgReturnGrants["value"]): MsgReturnGrants => {
+        console.log("MsgReturnGrants, fromAmino", args);
+        return args;
+      },
     },
     "/cosmos.vesting.v1beta1.MsgCreateVestingAccount": {
       aminoType: "cosmos-sdk/MsgCreateVestingAccount",

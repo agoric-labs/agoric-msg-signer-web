@@ -5,7 +5,6 @@ import { Button } from "./Button";
 import { TxToastMessage } from "./TxToastMessage";
 import { useNetwork, NetName } from "../hooks/useNetwork";
 import { useWallet } from "../hooks/useWallet";
-import { EncodeObject } from "@cosmjs/proto-signing";
 import { DeliverTxResponse, assertIsDeliverTxSuccess } from "@cosmjs/stargate";
 import { makeFeeObject, makeReturnGrantsMsg } from "../lib/messageBuilder";
 import { parseError } from "../utils/transactionParser";
@@ -30,7 +29,11 @@ const ReturnGrantsForm = ({ title, description }: FormProps) => {
     walletInputRef.current.value = walletAddress;
   };
 
-  async function signAndBroadcast(msg: EncodeObject) {
+  const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!formRef.current) throw new Error("No form data");
+    const formData = new FormData(formRef.current);
+    const address = (formData.get("walletAddress") as string) || "";
     if (!stargateClient) {
       toast.error("Network not connected.", { autoClose: 3000 });
       throw new Error("stargateClient not found");
@@ -42,22 +45,12 @@ const ReturnGrantsForm = ({ title, description }: FormProps) => {
     });
     let txResult: DeliverTxResponse | undefined;
     try {
-      const estimate = await stargateClient.simulate(
-        walletAddress,
-        [msg],
-        undefined
-      );
-      const adjustment = 1.3;
-      const gas = Math.ceil(estimate * adjustment);
-      console.log("msg", msg);
-      const { accountNumber, sequence } = await stargateClient.getSequence(
-        walletAddress
-      );
-      console.log({ accountNumber, sequence });
+      const msg = makeReturnGrantsMsg(address);
       txResult = await stargateClient.signAndBroadcast(
         walletAddress,
         [msg],
-        makeFeeObject({ gas })
+        makeFeeObject({ gas: 200000 }),
+        "" // memo
       );
       assertIsDeliverTxSuccess(txResult);
     } catch (e) {
@@ -83,16 +76,6 @@ const ReturnGrantsForm = ({ title, description }: FormProps) => {
       });
       formRef.current?.reset();
     }
-  }
-
-  const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!formRef.current) throw new Error("No form data");
-    const formData = new FormData(formRef.current);
-    const address = (formData.get("walletAddress") as string) || "";
-    const msg = makeReturnGrantsMsg(address);
-    console.log("msg", msg);
-    return await signAndBroadcast(msg);
   };
 
   return (
