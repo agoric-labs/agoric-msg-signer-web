@@ -89,28 +89,30 @@ const ReturnGrantsForm = ({ title, description }: FormProps) => {
             {description}
           </p>
 
-          <div className="sm:grid sm:grid-cols-4 sm:items-start sm:gap-4 sm:py-6">
+          <div className="sm:grid sm:grid-cols-5 sm:items-start sm:gap-4 sm:py-6">
             <label
               htmlFor="address"
               className="block text-sm font-medium leading-6 text-gray-900 sm:pt-1.5"
             >
               Wallet Address
             </label>
-            <div className="mt-2 sm:col-span-2 sm:mt-0">
+            <div className="mt-2 sm:col-span-4 sm:mt-0">
               <input
                 ref={walletInputRef}
                 type="text"
                 name="walletAddress"
                 id="walletAddress"
-                className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-emerald-600 sm:max-w-sm sm:text-sm sm:leading-6"
+                className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-emerald-600 sm:max-w-xl sm:text-xs sm:leading-6"
               />
               <p className="mt-3 text-xs leading-6 text-gray-600">
                 Your wallet address.
               </p>
             </div>
-            <div className="mt-2 sm:col-span-1 sm:mt-0 -ml-12 sm:-ml-20">
+          </div>
+          <div className="sm:grid sm:grid-cols-5 sm:items-start sm:gap-4">
+            <div className="mt-2 sm:col-span-1 sm:mt-0">
               <button
-                className="text-xs bg-wild-sand-100 hover:bg-wild-sand-200 items-center justify-center rounded-md px-2 py-2 ml-4 my-auto mt-1"
+                className="text-sm bg-wild-sand-100 hover:bg-wild-sand-200 items-center justify-center rounded-md px-2 py-2 my-auto mt-1"
                 type="button"
                 onClick={handlePopulateAddress}
               >
