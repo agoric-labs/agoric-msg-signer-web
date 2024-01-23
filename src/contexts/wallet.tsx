@@ -12,6 +12,7 @@ import {
   createBankAminoConverters,
 } from "@cosmjs/stargate";
 import { AccountData } from "@keplr-wallet/types";
+import type { OfflineSigner } from "@cosmjs/proto-signing";
 import { useNetwork, NetName } from "../hooks/useNetwork";
 import { suggestChain } from "../lib/suggestChain";
 import { getNetConfigUrl } from "../lib/getNetworkConfig";
@@ -23,18 +24,18 @@ import { makeClient } from "../lib/startgate";
 interface WalletContext {
   walletAddress: string | null;
   connectWallet: () => Promise<void>;
-  stargateClient: SigningStargateClient | undefined;
+  stargateClient: SigningStargateClient | null;
   isLoading: boolean;
   rpc: string | null;
   chainId: string | null;
-  offlineSigner: any;
+  offlineSigner: OfflineSigner | null;
   pubkey: Uint8Array | null;
 }
 
 export const WalletContext = createContext<WalletContext>({
   walletAddress: null,
   connectWallet: () => Promise.resolve(undefined),
-  stargateClient: undefined,
+  stargateClient: null,
   isLoading: false,
   rpc: null,
   chainId: null,
@@ -47,8 +48,8 @@ export const WalletContextProvider = ({
 }: {
   children: ReactNode;
 }) => {
-  const stargateClient = useRef<SigningStargateClient | undefined>(undefined);
-  const offlineSigner = useRef<any>(undefined);
+  const stargateClient = useRef<SigningStargateClient | null>(null);
+  const offlineSigner = useRef<OfflineSigner | null>(null);
   const { netName } = useNetwork();
   const [currNetName, setCurrNetName] = useState(netName);
   const [rpc, setRpc] = useState<WalletContext["rpc"]>(null);
@@ -72,14 +73,13 @@ export const WalletContextProvider = ({
   const connectWallet = useCallback(async () => {
     setIsLoading(true);
     const { chainId, rpc } = await suggestChain(
-      getNetConfigUrl(netName as NetName)
+      getNetConfigUrl(netName as NetName),
     );
     setRpc(rpc);
     setChainId(chainId);
     if (chainId) {
       await window.keplr.enable(chainId);
       offlineSigner.current = window.keplr.getOfflineSignerOnlyAmino(chainId);
-      // const offlineSigner = window.keplr.getOfflineSigner(chainId);
       const accounts = await offlineSigner.current.getAccounts();
       // if (accounts?.[0].address !== walletAddress) {
       console.log("accounts[0]", accounts[0]);
@@ -97,7 +97,7 @@ export const WalletContextProvider = ({
           offlineSigner.current,
           converters,
           accountParser,
-          registry
+          registry,
         );
       } catch (e) {
         console.error("error stargateClient setup", e);
@@ -106,7 +106,7 @@ export const WalletContextProvider = ({
         setIsLoading(false);
       }
     }
-  }, [netName, walletAddress]);
+  }, [netName]);
 
   if (netName && currNetName !== netName) {
     if (walletAddress) connectWallet();
