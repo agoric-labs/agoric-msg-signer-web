@@ -19,7 +19,7 @@ jobs:
         run: yarn lint
       - name: TS Check
         run: yarn ts:check
-      - name: yarn build
-        run: Build
+      - name: Build
+        run: yarn build
       - name: Test
         run: yarn test
