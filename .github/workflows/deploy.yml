@@ -1,7 +1,7 @@
 name: Deploy
 
 on:
-  pull_request:
+  push:
     branches:
       - main
 
@@ -19,6 +19,8 @@ jobs:
         run: yarn install
       - name: Build
         run: yarn build
+      - name: Disable Jekyll Processing # using vite
+        run: touch docs/.nojekyll
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@4.1.4
         with:
